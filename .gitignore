@@ -1,0 +1,9 @@
+.env
+cert.crt
+cert.csr
+cert.key
+migration.sql
+oauth.json
+requirements.txt
+**/__pycache__/
+.vscode/*
