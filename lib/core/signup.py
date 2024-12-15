@@ -11,13 +11,11 @@ class signup:
         self.db = database()
 
     def validate_inputs(self):
-        """Validate mandatory fields."""
         if not all([self.username, self.email, self.mobile, self.dob, self.password]):
             return False
         return True
 
     def hash_password(self):
-        """Hash the user's password."""
         try:
             salt = bcrypt.gensalt(rounds=15)
             hashed_password = bcrypt.hashpw(self.password.encode('utf-8'), salt)

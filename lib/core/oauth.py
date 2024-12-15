@@ -67,7 +67,6 @@ class oauth:
 
     def oauth_signup(self, user_info, client_info):
         try:
-            # Check if the user already exists
             duplicate_entry = self.check_duplicate_entry('users', email=user_info['email'])
             if duplicate_entry:
                 return {'status': 'error', 'message': 'User already exists', 'status_code': 409}

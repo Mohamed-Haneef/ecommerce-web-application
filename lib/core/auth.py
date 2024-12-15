@@ -39,6 +39,7 @@ class auth:
         session_token = self.generate_random_key() 
         session['session_token'] = session_token
         session['user_id'] = user_id
+        print(f"Session token set: {session['session_token']}")
         print(f'auth # agent : {client_info['http_agent']} | ip : {client_info['http_user']}')
 
         query = "INSERT INTO login_log (user_id, session_token, http_agent, http_user) VALUES (%s, %s, %s, %s)"
@@ -47,29 +48,49 @@ class auth:
         print(f"Log updated: User id: {user_id} | session token: {session_token} | http_agent: {client_info['http_agent']} | http_user: {client_info['http_user']}")
 
         return {'status': 'success', 'message': 'User authenticated and session token generated', 'status_code': 200}
+    
+    @staticmethod
+    def is_authorized(client_info):
+        session_token = session.get('session_token')
+        user_id = session.get('user_id')
+        db = database()
+        
+        print(f'session_token at auth stage{session_token}')
+        print(f'user-id at auth stage{user_id}')
+        if not session_token or not user_id:
+            print('session id or uid not found')
+            return False  
+        
+        try:
+            query = "SELECT user_id, session_token, http_agent, http_user, login_time FROM login_log WHERE session_token = %s"
+            db.cursor.execute(query, (session_token,))
+            result = db.cursor.fetchone()
+            
+            if not result:
+                print('session token not found in the database')
+                return False 
+                
+            
+            user_id_log, session_token_db, http_agent, http_user, login_time = result
+            
+            if user_id != user_id_log:
+                print('user id mismatch')
+                return False  
+            
+            if not client_info.get('http_agent') or not client_info.get('http_user'):
+                print('client http missing')
+                return False
+            
+            if (datetime.now() - login_time).total_seconds() > 3600: 
+                print(f'login time expired, Logged in before : {(datetime.now() - login_time).total_seconds()}')
+                return False
+            
+            if http_agent == client_info['http_agent'] and http_user == client_info['http_user']:
+                return True  
+            
+            print('client and server http mismatch')
+            return False 
 
-    def authorize(self, client_info):
-        if not self.session_token:
-            return {'status': 'error', 'message': 'Session token missing', 'status_code': 400}
-
-        query = "SELECT user_id, session_token, http_agent, http_user, login_time FROM login_log WHERE session_token = %s"
-        self.db.cursor.execute(query, (self.session_token,))
-        result = self.db.cursor.fetchone()
-
-        if not result:
-            return {'status': 'error', 'message': 'Session token not found', 'status_code': 400}
-
-        self.user_id_log, self.session_token_db, self.http_agent, self.http_user, self.login_time = result
-
-        if not client_info.http_agent or not client_info.http_user:
-            return {'status': 'error', 'message': 'HTTP_AGENT or HTTP_USER missing', 'status_code': 400}
-
-        if self.user_id == self.user_id_log and self.http_agent == client_info.http_agent and self.http_user == client_info.http_user:
-            return {'status': 'error', 'message': 'Session already authenticated', 'status_code': 409}
-
-        if (datetime.now() - self.login_time).total_seconds() > 3600:  
-            time_remaining = (datetime.now() - self.login_time).total_seconds()
-            print(f'Time remaining for the login session: {time_remaining}')
-            return {'status': 'error', 'message': 'Session expired', 'status_code': 401}
-
-        return {'status': 'success', 'message': 'User authorized', 'status_code': 200}
+        except Exception as e:
+            print(f"Error during authorization: {e}")
+            return False  
