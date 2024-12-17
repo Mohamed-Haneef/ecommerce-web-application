@@ -1,0 +1,41 @@
+.button-orange {
+    background-color: #e67e22 !important;
+    color: #fff;
+    border: none;
+    font-size: 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.button-orange:hover(){
+    background-color: #fff;
+    color: black;
+    border: #e67e22 1px solid !important;
+    font-size: 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+
+}
+
+.button-outline-orange {
+    background-color: #fff;
+    color: black;
+    border: #e67e22 1px solid;
+    font-size: 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.button-outline-orange:hover(){
+    background-color: #e67e22;
+    color: #fff;
+    border: none;
+    font-size: 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+

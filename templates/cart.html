@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container my-5">
+    <h1 class="text-center mb-4">Your Cart</h1>
+    {% if items %}
+        <table class="table table-bordered table-striped">
+            <thead class="table-warning">
+                <tr>
+                    <th>Product</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Total</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                    <tr>
+                        <td>{{ item[1] }}</td>  <!-- Item name (index 1) -->
+                        <td>${{ item[2] }}</td>  <!-- Price (index 2) -->
+                        <td>{{ item[3] }}</td>  <!-- Quantity (index 3) -->
+                        <td>${{ item[2] * item[3] }}</td>  <!-- Total (price * quantity) -->
+                        <td>
+                            <button class="btn button-orange" onclick="updateItem({{ item[0] }})">Update</button> 
+                            <button class="btn btn-danger" onclick="removeItem({{ item[0] }})">Remove</button> 
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="d-flex justify-content-between align-items-center">
+            <h2>Total: ${{ total }}</h2>
+            <button class="btn btn-danger" onclick="clearCart()">Clear Cart</button>
+        </div>
+    {% else %}
+        <p class="text-center">Your cart is empty.</p>
+    {% endif %}
+</div>
+<script src="{{ url_for('static', filename='js/cart.js') }}"></script>
+{% endblock %}

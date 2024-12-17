@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/add_product.css') }}">
+<div class="container">
+    <h1>Product Management</h1>
+
+    <section id="add-product">
+        <h2>Add Product</h2>
+        <form id="addProductForm">
+            <input type="text" id="productName" placeholder="Product Name" required>
+            <textarea id="productDescription" placeholder="Product Description" required></textarea>
+            <input type="number" id="productPrice" placeholder="Product Price" step="0.01" required>
+            <input type="file" id="productImage" accept="image/*" required>
+            <button type="submit">Add Product</button>
+        </form>
+    </section>
+
+    <section id="update-product">
+        <h2>Update Product</h2>
+        <form id="updateProductForm">
+            <input type="number" id="updateProductId" placeholder="Product ID" required>
+            <input type="text" id="updateProductName" placeholder="Product Name">
+            <textarea id="updateProductDescription" placeholder="Product Description"></textarea>
+            <input type="number" id="updateProductPrice" placeholder="Product Price" step="0.01">
+            <input type="file" id="updateProductImage" accept="image/*">
+            <button type="submit">Update Product</button>
+        </form>
+    </section>
+
+    <section id="delete-product">
+        <h2>Delete Product</h2>
+        <form id="deleteProductForm">
+            <input type="number" id="deleteProductId" placeholder="Product ID" required>
+            <button type="submit">Delete Product</button>
+        </form>
+    </section>
+</div>
+
+<script src="{{ url_for('static', filename='js/add_product.js') }}"></script>
+{% endblock %}

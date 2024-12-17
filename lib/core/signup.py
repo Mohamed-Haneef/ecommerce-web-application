@@ -1,5 +1,8 @@
 import bcrypt
-from lib.utils.database import database  
+from lib.utils.database import database
+from flask import session
+import random  
+from lib.core.auth import auth as _auth
 
 class signup:
     def __init__(self, userdata):
@@ -42,19 +45,26 @@ class signup:
 
     def create_user(self):
         try:
+            client_info=session.get('client_info')
             hashed_password = self.hash_password()
             if not hashed_password:
                 return {'status': 'error', 'message': 'Password hashing failed', 'status_code': 500}
 
+            rand_suffix = str(random.randint(100, 9999))
+            gen_username = self.username.strip().lower().replace(" ", "") + rand_suffix
+
             insert_user_query = """
-                INSERT INTO users (username, email, dob, mobile)
-                VALUES (%s, %s, %s, %s) RETURNING id
+                INSERT INTO users (username, fullname, email, dob, mobile)
+                VALUES (%s, %s, %s, %s, %s) RETURNING id, role
             """
             self.db.cursor.execute(
                 insert_user_query, 
-                (self.username, self.email, self.dob, self.mobile)
+                (gen_username, self.username, self.email, self.dob, self.mobile)
             )
-            user_id = self.db.cursor.fetchone()[0]
+            return_data = self.db.cursor.fetchone()
+            user_id = return_data[0]
+            user_role = return_data[1]
+            print(f'\n \n user_id returing : {user_id} \n \n \n')
 
             insert_auth_query = """
                 INSERT INTO auth (user_id, password_hash)
@@ -63,6 +73,14 @@ class signup:
             print(f'hashed password: {hashed_password}')
             self.db.cursor.execute(insert_auth_query, (user_id, hashed_password))
             self.db.conn.commit()
+
+            s_auth_instance = _auth()
+            usr = {
+                'username': self.username,
+                'userrole': user_role
+            }
+            s_auth_instance.authenticate(user_id, userinfo=usr)
+
             return {'status': 'success', 'message': 'User created successfully', 'status_code': 200}
         except Exception as e:
             self.db.conn.rollback() 
@@ -70,14 +88,12 @@ class signup:
             return {'status': 'error', 'message': f'Error creating user: {e}', 'status_code': 500}
 
     def signup_user(self):
-        """Main signup function to validate, check duplicates, and create a user."""
         if not self.validate_inputs():
             return {'status': 'error', 'message': 'Input validation failed', 'status_code': 400}
 
         try:
             duplicate_entry = self.check_duplicate_entry(
                 "users",
-                username=self.username,
                 email=self.email,
                 mobile=self.mobile,
             )

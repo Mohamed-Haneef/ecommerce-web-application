@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="product-image-container">
+                {% if product.image_path %}
+                <img src="{{ product.image_path }}" alt="{{ product.name }}" class="img-fluid rounded">
+                {% else %}
+                <div class="text-muted">No Image Available</div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-md-6">
+            <h1 class="mb-3">{{ product.name }}</h1>
+            <p class="text-muted">{{ product.description }}</p>
+            <p class="text-success fs-4">${{ product.price }}</p>
+            <p class="text-grey">Product ID: {{ product.id }}</p>
+
+            {% if auth_status %}
+            <button class="btn btn-warning mt-3 add-to-cart" data-product-id="{{ product.id }}" data-product-name="{{ product.name }}" data-product-image="{{ product.image_path }}" data-product-description="{{ product.description }}" data-product-price="{{ product.price }}">Add to Cart</button>
+            {% else %}
+            <p class="text-danger mt-3">Please log in to add products to the cart.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% include "cart_dialog.html" %}
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const addToCartButton = document.querySelector('.add-to-cart');
+
+    if (addToCartButton) {
+        addToCartButton.addEventListener('click', function () {
+            const productId = this.dataset.productId;
+            const productName = this.dataset.productName;
+            const productImage = this.dataset.productImage;
+            const productDescription = this.dataset.productDescription;
+            const productPrice = this.dataset.productPrice;
+
+            document.getElementById('product-name').innerText = productName;
+            document.getElementById('product-description').innerText = productDescription;
+            document.getElementById('product-price').innerText = productPrice;
+            document.getElementById('product-image').src = productImage;
+            document.getElementById('add-to-cart-button').setAttribute('data-product-id', productId);
+
+            $('#addToCartModal').modal('show');
+        });
+    }
+
+    document.getElementById('add-to-cart-button').addEventListener('click', async function () {
+        const productId = this.getAttribute('data-product-id');
+        const quantity = document.getElementById('quantity').value;
+
+        try {
+            const response = await fetch('/api/v1/cart/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ product_id: productId, quantity: parseInt(quantity, 10) })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                alert(`${quantity} of ${document.getElementById('product-name').innerText} added to the cart successfully.`);
+                $('#addToCartModal').modal('hide');
+            } else {
+                alert(result.message || 'Failed to add product to cart. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error adding product to cart:', error);
+            alert('An error occurred while adding the product to the cart.');
+        }
+    });
+});
+</script>
+
+{% endblock %}

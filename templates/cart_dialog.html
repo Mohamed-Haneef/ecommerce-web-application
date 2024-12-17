@@ -1,0 +1,79 @@
+<div class="modal fade" id="addToCartModal" tabindex="-1" role="dialog" aria-labelledby="addToCartModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add to cart</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+            <div class="modal-body">
+                <div id="product-details" class="text-center">
+                    <img id="product-image" src="" alt="" class="img-fluid mb-3 rounded" style="max-width: 150px;">
+                    <h4 id="product-name" class="mb-2"></h4>
+                    <p id="product-description" class="text-muted"></p>
+                    <p><strong>Price:</strong> $<span id="product-price"></span></p>
+                    <div class="form-group mt-3">
+                        <label for="quantity"><strong>Quantity</strong></label>
+                        <input type="number" class="form-control text-center" id="quantity" min="1" value="1" step="1" style="max-width: 100px; margin: 0 auto;">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="add-to-cart-button">Add to Cart</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const addToCartButtons = document.querySelectorAll('.add-to-cart');
+
+    addToCartButtons.forEach(button => {
+        button.addEventListener('click', function () {
+            console.log('i am being clicked')
+            const productCard = button.closest('.card');
+            const productId = productCard.dataset.productId;
+            const productName = productCard.dataset.productName;
+            const productImage = productCard.dataset.productImage;
+            const productDescription = productCard.dataset.productDescription;
+            const productPrice = productCard.dataset.productPrice;
+
+            document.getElementById('product-name').innerText = productName;
+            document.getElementById('product-description').innerText = productDescription;
+            document.getElementById('product-price').innerText = productPrice;
+            document.getElementById('product-image').src = productImage;
+            document.getElementById('add-to-cart-button').setAttribute('data-product-id', productId);
+
+            $('#addToCartModal').modal('show');
+        });
+    });
+
+    document.getElementById('add-to-cart-button').addEventListener('click', async function () {
+        const productId = this.getAttribute('data-product-id');
+        const quantity = document.getElementById('quantity').value;
+
+        try {
+            const response = await fetch('/api/v1/cart/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ product_id: productId, quantity: parseInt(quantity, 10) })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                alert(`${quantity} of ${document.getElementById('product-name').innerText} added to the cart successfully.`);
+                $('#addToCartModal').modal('hide');
+            } else {
+                alert(result.message || 'Failed to add product to cart. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error adding product to cart:', error);
+            alert('An error occurred while adding the product to the cart.');
+        }
+    });
+});
+</script>

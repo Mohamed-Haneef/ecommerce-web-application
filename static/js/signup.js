@@ -1,5 +1,5 @@
 document.getElementById('signup-form').addEventListener('submit', function(event) {
-    event.preventDefault(); // Prevent form submission
+    event.preventDefault();
 
     const formData = new FormData(this);
     var reenterpassword = formData.get('re-enter-password')
@@ -34,9 +34,7 @@ document.getElementById('signup-form').addEventListener('submit', function(event
             alert(data.error);  
         } else {
             alert('Signup successful!');
-            // You can redirect to another page or reset the form
-            // window.location.href = '/some-other-page';
-            // document.getElementById('signup-form').reset();
+            redirect('/')
         }
     })
     .catch(error => {

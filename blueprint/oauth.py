@@ -58,7 +58,7 @@ def callback():
             return jsonify({oauth_response['status']: oauth_response['message']}), oauth_response['status_code']
 
         t_response =  jsonify({oauth_response['status']: oauth_response['message']}), oauth_response['status_code']
-        return render_template('profile.html', oauth=t_response)
+        return redirect(url_for('home_bp.home_page'))
     except Exception as e:
         print(f"Callback error: {e}")
         return "An error occurred during the OAuth process. Please try again later.", 500

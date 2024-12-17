@@ -12,17 +12,31 @@ class auth:
         self.session_token = session.get('session_token')
         self.user_id = session.get('user_id')
     
-    def get_user_id(self, email):
-        try:
-            query = "SELECT id FROM users WHERE email = %s;"
-            with self.db.conn.cursor() as cursor: 
-                cursor.execute(query, (email,))
-                result = cursor.fetchone()  
-                return result[0] if result else None 
-        except Exception as e:
-            print(f"Error fetching user ID by email: {e}")
-            return None
+    @staticmethod
+    def pop_session():
+        session.pop('user_id', None)
+        session.pop('session_token', None)
+        session.pop('fullname', None)
+        session.pop('user_role', None)
+        session.pop('client_info', None)
 
+    def get_user_info(self, email):
+        try:
+            query = "SELECT id, username, fullname, role FROM users WHERE email = %s;"
+            with self.db.conn.cursor() as cursor:
+                cursor.execute(query, (email,))
+                result = cursor.fetchone()
+                if result:
+                    return {
+                        "id": result[0],
+                        "username": result[1],
+                        "fullname": result[2],
+                        'user_role': result[3]
+                    }
+                return None
+        except Exception as e:
+            print(f"Error fetching user info by email: {e}")
+            return None
 
     @staticmethod
     def generate_random_key(length=32):
@@ -31,14 +45,22 @@ class auth:
         random_key = ''.join(secrets.choice(characters) for _ in range(length))
         return random_key
 
-    def authenticate(self, user_id, client_info):
-        """Authenticate the user and generate a session token."""
+    def authenticate(self, user_id, userinfo):
+        client_info = session.get('client_info')
         if not client_info['http_agent'] or not client_info['http_user']:
             return {'status': 'error', 'message': 'HTTP_AGENT or HTTP_USER missing', 'status_code': 300}
 
+        user_role = userinfo['userrole']
+        user_name = userinfo['username']
         session_token = self.generate_random_key() 
         session['session_token'] = session_token
         session['user_id'] = user_id
+        session['fullname'] = user_name
+        session['user_role'] = user_role 
+        session['client_info'] = {
+            'http_agent': client_info['http_agent'],
+            'http_user': client_info['http_user']
+        }
         print(f"Session token set: {session['session_token']}")
         print(f'auth # agent : {client_info['http_agent']} | ip : {client_info['http_user']}')
 
@@ -50,9 +72,10 @@ class auth:
         return {'status': 'success', 'message': 'User authenticated and session token generated', 'status_code': 200}
     
     @staticmethod
-    def is_authorized(client_info):
+    def is_authorized():
         session_token = session.get('session_token')
         user_id = session.get('user_id')
+        client_info = session.get('client_info')
         db = database()
         
         print(f'session_token at auth stage{session_token}')
@@ -68,6 +91,7 @@ class auth:
             
             if not result:
                 print('session token not found in the database')
+                auth.pop_session()
                 return False 
                 
             
@@ -75,22 +99,27 @@ class auth:
             
             if user_id != user_id_log:
                 print('user id mismatch')
+                auth.pop_session()
                 return False  
             
             if not client_info.get('http_agent') or not client_info.get('http_user'):
                 print('client http missing')
+                auth.pop_session()
                 return False
             
             if (datetime.now() - login_time).total_seconds() > 3600: 
                 print(f'login time expired, Logged in before : {(datetime.now() - login_time).total_seconds()}')
+                auth.pop_session()
                 return False
             
             if http_agent == client_info['http_agent'] and http_user == client_info['http_user']:
                 return True  
             
             print('client and server http mismatch')
+            auth.pop_session()
             return False 
 
         except Exception as e:
             print(f"Error during authorization: {e}")
+            auth.pop_session()
             return False  

@@ -73,11 +73,8 @@ def api_login():
             return jsonify({'error': 'Mandatory field elements missing'}), 400
         
         user_login = _login(userdict)
-        client_info = {
-            'http_agent': request.headers.get('User-Agent'),
-            'http_user': request.remote_addr 
-        }
-        login_status = user_login.login_user(client_info=client_info)
+
+        login_status = user_login.login_user()
         if(login_status['status'] != 'success'):
             return jsonify({
             f'{login_status["status"]}': f'{login_status["message"]}'

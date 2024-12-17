@@ -1,4 +1,5 @@
 import bcrypt
+from flask import session
 from lib.utils.database import database
 from lib.core.auth import auth
 
@@ -20,7 +21,7 @@ class login:
         print('i am valid')
         try:
             query = """
-            SELECT u.id, u.username, u.email, u.mobile, a.password_hash
+            SELECT u.id, u.username, u.fullname, u.email, u.role, u.mobile, a.password_hash
             FROM users u
             JOIN auth a ON u.id = a.user_id
             WHERE u.email = %s
@@ -34,11 +35,13 @@ class login:
             if not result:
                 return {'status': 'error', 'message': 'Invalid email or password', 'status_code': 404}
 
-            self.user_id, self.username, self.email, self.mobile, self.password_hash = result
+            self.user_id, self.username, self.fullname, self.email, self.user_role, self.mobile, self.password_hash = result
             user_cred = {
                 'user_id': self.user_id,
                 'email': self.email,
-                'username': self.username
+                'username': self.username,
+                'fullname': self.fullname,
+                'userrole': self.user_role
             }
 
             return {'status': 'success', 'message': 'Credentials validated', 'status_code': 200, 'user_cred': user_cred}
@@ -46,20 +49,23 @@ class login:
             return {'status': 'error', 'message': f'Internal error: {self.password_hash}', 'status_code': 500}
 
 
-    def login_user(self, client_info):
+    def login_user(self):
         print("i am called")
         credentials_validation = self.validate_credentials()
         print(f'\n\n credential validation: {credentials_validation} \n \n')
         if credentials_validation['status'] != 'success':
             return credentials_validation
-
         try:
             print(self.user_id, self.username, self.email, self.mobile, self.password_hash)
             print(self.password.encode('utf-8'), self.password_hash.encode('utf-8'))
             if bcrypt.checkpw(self.password.encode('utf-8'), self.password_hash.encode('utf-8')):
-                print(f'auth # agent : {client_info['http_agent']} | ip : {client_info['http_user']}')
+                # print(f'auth # agent : {client_info['http_agent']} | ip : {client_info['http_user']}')
                 authentication = auth()
-                auth_status = authentication.authenticate(user_id=self.user_id, client_info=client_info)
+                usr = {
+                    'username': self.fullname,
+                    'userrole': self.user_role
+                }
+                auth_status = authentication.authenticate(user_id=self.user_id,userinfo=usr)
                 print(auth_status)
                 return {'status': 'success', 'message': 'Login successful', 'status_code': 200}
             else:

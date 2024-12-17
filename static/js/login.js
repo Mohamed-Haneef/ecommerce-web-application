@@ -33,7 +33,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
 
             if (response.ok) {
-                window.location.href = '/profile';
+                alert(JSON.stringify(result));
+                window.location.href = '/';
             } else {
                 alert(result.error || 'Login failed. Please try again.');
             }

@@ -71,19 +71,23 @@ class oauth:
             if duplicate_entry:
                 return {'status': 'error', 'message': 'User already exists', 'status_code': 409}
 
+            rand_suffix = str(random.randint(100, 9999))
+            gen_username = user_info['username'].strip().lower().replace(" ", "") + rand_suffix
+
             insert_user_query = """
-                INSERT INTO users (email, username, dob)
-                VALUES (%s, %s, %s) RETURNING id
+                INSERT INTO users (email, username, fullname, dob)
+                VALUES (%s, %s, %s, %s) RETURNING id, role
             """
             self.db.cursor.execute(
                 insert_user_query,
-                (user_info['email'], user_info['username'], user_info.get('dob', None))
+                (user_info['email'], gen_username, user_info['username'], user_info.get('dob', None))
             )
             result = self.db.cursor.fetchone()
             if result is None:
                 return {'status': 'error', 'message': 'Failed to retrieve user ID', 'status_code': 500}
 
             user_id = result[0]
+            user_role = result[1]
 
             insert_auth_query = """
                 INSERT INTO auth (user_id, oauth_provider, oauth_id)
@@ -93,7 +97,11 @@ class oauth:
             self.db.conn.commit()
 
             auth_instance = auth()  
-            auth_instance.authenticate(user_id, client_info=client_info) 
+            usr = {
+                'username': user_info['username'],
+                'userrole': user_role
+            }
+            auth_instance.authenticate(user_id, userinfo=usr) 
 
             return {'status': 'success', 'message': 'User created and logged in via OAuth', 'user_id': user_id, 'status_code': 200}
         
@@ -112,8 +120,12 @@ class oauth:
                 if existing_auth:
                     print(f'Existing auth: {existing_auth}')
                     auth_instance = auth() 
-                    u_id = auth_instance.get_user_id(user_info['email'])
-                    auth_instance.authenticate(u_id, client_info=client_info)  
+                    u_info = auth_instance.get_user_info(user_info['email'])
+                    usr = {
+                        'username': u_info['fullname'],
+                        'userrole': u_info['user_role']
+                    }
+                    auth_instance.authenticate(u_info['id'], userinfo=usr)  
 
                     return {'status': 'success', 'message': 'User logged in via OAuth', 'status_code': 200}
                 

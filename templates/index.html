@@ -1,8 +1,35 @@
 {% extends "base.html" %}
-
 {% block content %}
-    <h1>Monkey d luffy</h1>
-    <a href="/login">Login</a>
-    <a href="/signup">Signup</a>
-    </body>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+
+<div class="container mt-5">
+    <h1 class="mb-4 text-center" style="color: #e67e22;">Welcome, {{ name }}</h1>
+    <div class="row g-4">
+        {% for product in products %}
+        <div class="col-md-4 col-sm-6">
+            <div class="card h-100 shadow-sm" data-product-id="{{ product.id }}" data-product-name="{{ product.name }}" data-product-image="{{ product.image_path }}" data-product-description="{{ product.description }}" data-product-price="{{ product.price }}">
+                <div class="card-img-top img-container d-flex align-items-center justify-content-center">
+                    {% if product.image_path %}
+                    <img src="{{ product.image_path }}" alt="{{ product.name }}" class="img-fluid" style="width: 100%; height: 100%; object-fit: cover;">
+                    {% else %}
+                    <div class="text-muted">No Image Available</div>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title text-warning">{{ product.name }}</h5>
+                    <p class="card-text text-secondary product-description">{{ product.description }}</p>
+                    <p class="card-text text-success fs-5">$ {{ product.price }}</p>
+                    <p class="card-text text-grey fs-5">Product ID: {{ product.id }}</p>
+                    <a href="/product/view/{{ product.id }}" class="btn button-outline-orange w-100 my-2">View Product</a>
+                    {% if auth_status %}
+                    <button class="btn button-orange w-100 add-to-cart">Add to Cart</button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% include "cart_dialog.html" %}
 {% endblock %}

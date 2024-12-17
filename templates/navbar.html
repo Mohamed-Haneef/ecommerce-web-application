@@ -6,28 +6,34 @@
         </a>
 
         <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
-          <li><a href="#" class="nav-link px-2 link-secondary">Overview</a></li>
-          <li><a href="#" class="nav-link px-2 link-body-emphasis">Inventory</a></li>
-          <li><a href="#" class="nav-link px-2 link-body-emphasis">Customers</a></li>
-          <li><a href="#" class="nav-link px-2 link-body-emphasis">Products</a></li>
+          <li><a href="/" class="nav-link px-2 link-secondary">Home</a></li>
+          <li><a href="/cart" class="nav-link px-2 link-body-emphasis">Cart</a></li>
+          <li><a href="/product/add" class="nav-link px-2 link-body-emphasis">Add product</a></li>
         </ul>
 
-        <form class="col-12 col-lg-auto mb-3 mb-lg-0 me-lg-3" role="search">
+        <!-- <form class="col-12 col-lg-auto mb-3 mb-lg-0 me-lg-3" role="search">
           <input type="search" class="form-control" placeholder="Search..." aria-label="Search">
-        </form>
-
+        </form> -->
+        {% if auth_status %}
+        <!-- User is logged in -->
         <div class="dropdown text-end">
-          <a href="#" class="d-block link-body-emphasis text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-            <img src="https://github.com/mdo.png" alt="mdo" width="32" height="32" class="rounded-circle">
-          </a>
-          <ul class="dropdown-menu text-small">
-            <li><a class="dropdown-item" href="#">New project...</a></li>
-            <li><a class="dropdown-item" href="#">Settings</a></li>
-            <li><a class="dropdown-item" href="#">Profile</a></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="#">Sign out</a></li>
-          </ul>
+            <a href="#" class="d-block link-body-emphasis text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                <img src="data:image/png;base64,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"
+                 alt="Profile Picture" width="32" height="32" class="rounded-circle">
+            </a>
+            <ul class="dropdown-menu text-small">
+                <li><a class="dropdown-item" href="/profile">View Profile</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="/logout">Sign out</a></li>
+            </ul>
         </div>
+        {% else %}
+        <!-- User is not logged in -->
+        <div class="d-flex">
+            <a href="/login" class="btn button-outline-orange text-dark me-2">Login</a>
+            <a href="/signup" class="btn button-orange">Sign Up</a>
+        </div>
+        {% endif %}
       </div>
     </div>
   </header>

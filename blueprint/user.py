@@ -9,7 +9,10 @@ def profile():
             'http_agent': request.headers.get('User-Agent'),
             'http_user': request.remote_addr
         }
-    auth_status = _auth.is_authorized(client_info)
+
+    session['client_info'] = client_info
+    
+    auth_status = _auth.is_authorized()
     print(f'auth_status: {auth_status}')
     return render_template('profile.html', status=auth_status)
     
